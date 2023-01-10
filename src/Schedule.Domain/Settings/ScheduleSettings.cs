@@ -2,8 +2,12 @@
 
 public static class ScheduleSettings
 {
-    private const string Prefix = "Schedule";
+    private const string GlobalPrefix = "Schedule.";
 
-    //Add your own setting names here. Example:
-    //public const string MySetting1 = Prefix + ".MySetting1";
+    public static class Polesse
+    {
+        private const string Prefix = "Polesse.";
+        
+        public const string ApiUrl = GlobalPrefix + Prefix + "ApiUrl";
+    }
 }

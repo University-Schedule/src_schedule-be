@@ -35,8 +35,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.DbMigrator", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.HttpApi.Host", "src\Schedule.HttpApi.Host\Schedule.HttpApi.Host.csproj", "{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.MauiBlazor", "src\Schedule.MauiBlazor\Schedule.MauiBlazor.csproj", "{DA440498-8FB6-4752-A499-995CFFB27FFA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,12 +97,6 @@ Global
 		{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DA440498-8FB6-4752-A499-995CFFB27FFA}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -124,7 +116,6 @@ Global
 		{EF480016-9127-4916-8735-D2466BDBC582} = {04DBDB01-70F4-4E06-B468-8F87850B22BE}
 		{70680696-BB1E-4383-BCB2-42C3767171FB} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
-		{DA440498-8FB6-4752-A499-995CFFB27FFA} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F3156F7-1E30-D20D-688D-07AC44A75A83}

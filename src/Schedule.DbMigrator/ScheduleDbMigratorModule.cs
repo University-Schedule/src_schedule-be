@@ -11,5 +11,5 @@ namespace Schedule.DbMigrator;
 )]
 public class ScheduleDbMigratorModule : AbpModule
 {
-
+    
 }

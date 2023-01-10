@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Schedule.Models.Parser;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -55,6 +56,23 @@ public class ScheduleDbContext :
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<Edition> Editions { get; set; }
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
+    
+    // Parser
+    public virtual DbSet<PeriodModel> Periods { get; set; }
+    public virtual DbSet<DaysDefModel> DaysDefs { get; set; }
+    public virtual DbSet<WeeksDefModel> WeeksDefs { get; set; }
+    public virtual DbSet<TermsDefModel> TermsDefs { get; set; }
+    public virtual DbSet<SubjectModel> Subjects { get; set; }
+    public virtual DbSet<TeacherModel> Teachers { get; set; }
+    public virtual DbSet<BuildingModel> Buildings { get; set; }
+    public virtual DbSet<ClassRoomModel> Classrooms { get; set; }
+    public virtual DbSet<GradeModel> Grades { get; set; }
+    public virtual DbSet<ClassModel> Classes { get; set; }
+    public virtual DbSet<GroupModel> Groups { get; set; }
+    public virtual DbSet<StudentModel> Students { get; set; }
+    public virtual DbSet<StudentSubjectsModel> StudentSubjects { get; set; }
+    public virtual DbSet<LessonModel> Lessons { get; set; }
+    public virtual DbSet<CardModel> Cards { get; set; }
 
     #endregion
 
