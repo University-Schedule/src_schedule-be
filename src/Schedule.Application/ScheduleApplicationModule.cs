@@ -1,4 +1,6 @@
-﻿using Volo.Abp.Account;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Schedule.Helpers.Parser;
+using Volo.Abp.Account;
 using Volo.Abp.AuditLogging;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
@@ -38,5 +40,7 @@ public class ScheduleApplicationModule : AbpModule
         {
             options.AddMaps<ScheduleApplicationModule>();
         });
+
+        //context.Services.AddSingleton<IParseXmlHelper, ParseXmlHelper>();
     }
 }

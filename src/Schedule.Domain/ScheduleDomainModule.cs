@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Schedule.Localization;
 using Schedule.MultiTenancy;
+using Schedule.Settings;
 using Volo.Abp.AuditLogging;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Emailing;
@@ -50,6 +51,11 @@ public class ScheduleDomainModule : AbpModule
         Configure<AbpMultiTenancyOptions>(options =>
         {
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
+        });
+        
+        Configure<SettingManagementOptions>(options =>
+        {
+            options.Providers.Add<ScheduleSettingManagementStore>();
         });
 
         Configure<AbpLocalizationOptions>(options =>
