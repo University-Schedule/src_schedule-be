@@ -4,9 +4,6 @@ namespace Schedule.Dtos.Parser;
 
 public class GradeDto
 {
-    [DisplayName("id")]
-    public string Id { get; set; }
-    
     [DisplayName("grade")]
     public string Grade { get; set; }
     

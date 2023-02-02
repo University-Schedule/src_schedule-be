@@ -4,9 +4,6 @@ namespace Schedule.Dtos.Parser;
 
 public class CardDto
 {
-    [DisplayName("id")]
-    public string Id { get; set; }
-    
     [DisplayName("lessonid")]
     public string LessonId { get; set; }
     

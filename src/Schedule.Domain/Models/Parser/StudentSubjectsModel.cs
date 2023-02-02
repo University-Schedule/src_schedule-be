@@ -1,14 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Volo.Abp.Domain.Entities;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using Volo.Abp.Domain.Entities.Auditing;
 
 namespace Schedule.Models.Parser;
 
 [Table(ScheduleConsts.DbTablePrefix + "StudentSubjects")]
-public class StudentSubjectsModel : Entity<string>
+public class StudentSubjectsModel : CreationAuditedEntity<string>
 {
-    private readonly string _id = string.Empty;
-    private const int MaxIdLength = 16;
-    
+    public sealed override string Id { get; protected set; }
     public string StudentId { get; set; }
     public string SubjectId { get; set; }
     public string SeminarGroup { get; set; }
@@ -21,13 +20,14 @@ public class StudentSubjectsModel : Entity<string>
     }
 
     public StudentSubjectsModel(
+        string id,
         string studentId,
         string subjectId,
         string seminarGroup,
         string importance,
         string alternateFor)
     {
-        Id = _id.GetStringId(MaxIdLength);
+        Id = id;
         StudentId = studentId;
         SubjectId = subjectId;
         SeminarGroup = seminarGroup;
