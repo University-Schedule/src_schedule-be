@@ -100,14 +100,29 @@ public class ScheduleDbContext :
         builder.ConfigureTextTemplateManagement();
         builder.ConfigureBlobStoring();
         builder.ConfigureGdpr();
+        
+        /*builder.Entity<CardModel>().HasNoKey();
+        builder.Entity<CardModel>(b =>
+        {
+            b.Ignore(p => p.Id);
+        });
 
-        /* Configure your own tables/entities inside here */
+        builder.Entity<GradeModel>().HasNoKey();
+        builder.Entity<GradeModel>(b =>
+        {
+            b.Ignore(p => p.Id);
+        });
 
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(ScheduleConsts.DbTablePrefix + "YourEntities", ScheduleConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
+        builder.Entity<PeriodModel>().HasNoKey();
+        builder.Entity<PeriodModel>(b =>
+        {
+            b.Ignore(p => p.Id);
+        });
+
+        builder.Entity<StudentSubjectsModel>().HasNoKey();
+        builder.Entity<StudentSubjectsModel>(b =>
+        {
+            b.Ignore(p => p.Id);
+        });*/
     }
 }

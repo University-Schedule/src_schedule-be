@@ -1,57 +1,59 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using ChoETL;
 using Schedule.Dtos.Parser;
+using Schedule.EntityFrameworkCore;
 using Schedule.Inputs;
+using Schedule.Interfaces;
+using Schedule.Interfaces.Helper.Parser;
 using Schedule.Models.Parser;
 using Schedule.Settings;
-using Volo.Abp.DependencyInjection;
-using Volo.Abp.Domain.Repositories;
+// ReSharper disable All
 
 namespace Schedule.Helpers.Parser;
-
-public interface IParseXmlHelper : ISingletonDependency
-{
-    Task ParsePolesseAsync();
-}
 
 public class ParseXmlHelper : IParseXmlHelper
 {
     private readonly IScheduleSettingManagementProvider _scheduleSettingManagementProvider;
-    private readonly IRepository<BuildingModel, string> _buildingRepository;
-    private readonly IRepository<CardModel, string> _cardRepository;
-    private readonly IRepository<ClassModel, string> _classRepository;
-    private readonly IRepository<ClassRoomModel, string> _classRoomRepository;
-    private readonly IRepository<DaysDefModel, string> _daysDefRepository;
-    private readonly IRepository<GradeModel, string> _gradeRoomRepository;
-    private readonly IRepository<GroupModel, string> _groupRepository;
-    private readonly IRepository<LessonModel, string> _lessonRepository;
-    private readonly IRepository<PeriodModel, string> _periodRepository;
-    private readonly IRepository<StudentModel, string> _studentRepository;
-    private readonly IRepository<StudentSubjectsModel, string> _studentSubjectsRepository;
-    private readonly IRepository<SubjectModel, string> _subjectRepository;
-    private readonly IRepository<TeacherModel, string> _teacherRepository;
-    private readonly IRepository<TermsDefModel, string> _termsDefRepository;
-    private readonly IRepository<WeeksDefModel, string> _weeksDefRepository;
+    private readonly IBuildingRepository _buildingRepository;
+    private readonly ICardRepository _cardRepository;
+    private readonly IClassRepository _classRepository;
+    private readonly IClassRoomRepository _classRoomRepository;
+    private readonly IDaysDefRepository _daysDefRepository;
+    private readonly IGradeRepository _gradeRepository;
+    private readonly IGroupRepository _groupRepository;
+    private readonly ILessonRepository _lessonRepository;
+    private readonly IPeriodRepository _periodRepository;
+    private readonly IStudentRepository _studentRepository;
+    private readonly IStudentSubjectsRepository _studentSubjectsRepository;
+    private readonly ISubjectRepository _subjectRepository;
+    private readonly ITeacherRepository _teacherRepository;
+    private readonly ITermsDefRepository _termsDefRepository;
+    private readonly IWeeksDefRepository _weeksDefRepository;
+    private readonly PalesseDapperRepository _dapperRepository;
+    private static Encoding unicode = Encoding.UTF8;
 
     public ParseXmlHelper(
         IScheduleSettingManagementProvider scheduleSettingManagementProvider, 
-        IRepository<BuildingModel, string> buildingRepository, 
-        IRepository<CardModel, string> cardRepository, 
-        IRepository<ClassModel, string> classRepository,
-        IRepository<ClassRoomModel, string> classRoomRepository, 
-        IRepository<DaysDefModel, string> daysDefRepository, 
-        IRepository<GradeModel, string> gradeRoomRepository, 
-        IRepository<GroupModel, string> groupRepository, 
-        IRepository<LessonModel, string> lessonRepository, 
-        IRepository<PeriodModel, string> periodRepository, 
-        IRepository<StudentModel, string> studentRepository, 
-        IRepository<StudentSubjectsModel, string> studentSubjectsRepository, 
-        IRepository<SubjectModel, string> subjectRepository,
-        IRepository<TeacherModel, string> teacherRepository, 
-        IRepository<TermsDefModel, string> termsDefRepository, 
-        IRepository<WeeksDefModel, string> weeksDefRepository)
+        IBuildingRepository buildingRepository, 
+        ICardRepository cardRepository, 
+        IClassRepository classRepository,
+        IClassRoomRepository classRoomRepository, 
+        IDaysDefRepository daysDefRepository, 
+        IGradeRepository gradeRepository, 
+        IGroupRepository groupRepository, 
+        ILessonRepository lessonRepository, 
+        IPeriodRepository periodRepository, 
+        IStudentRepository studentRepository, 
+        IStudentSubjectsRepository studentSubjectsRepository, 
+        ISubjectRepository subjectRepository,
+        ITeacherRepository teacherRepository, 
+        ITermsDefRepository termsDefRepository, 
+        IWeeksDefRepository weeksDefRepository, PalesseDapperRepository dapperRepository)
     {
         _scheduleSettingManagementProvider = scheduleSettingManagementProvider;
         _buildingRepository = buildingRepository;
@@ -59,7 +61,7 @@ public class ParseXmlHelper : IParseXmlHelper
         _classRepository = classRepository;
         _classRoomRepository = classRoomRepository;
         _daysDefRepository = daysDefRepository;
-        _gradeRoomRepository = gradeRoomRepository;
+        _gradeRepository = gradeRepository;
         _groupRepository = groupRepository;
         _lessonRepository = lessonRepository;
         _periodRepository = periodRepository;
@@ -69,10 +71,14 @@ public class ParseXmlHelper : IParseXmlHelper
         _teacherRepository = teacherRepository;
         _termsDefRepository = termsDefRepository;
         _weeksDefRepository = weeksDefRepository;
+        _dapperRepository = dapperRepository;
     }
 
-    public async Task ParsePolesseAsync()
+    public async Task<string> ParsePolesseAsync()
     {
+        var sw = new Stopwatch();
+        sw.Start();
+        
         var xmlStringResponse = await GetXmlStringFromResponseAsync(new DownLoadFileInput()
         {
             Url = await _scheduleSettingManagementProvider.GetPolesseApiUrlAsync(),
@@ -95,6 +101,10 @@ public class ParseXmlHelper : IParseXmlHelper
         await ParseTeachersAsync(xmlStringResponse);
         await ParseTermsDefsAsync(xmlStringResponse);
         await ParseWeeksDefsAsync(xmlStringResponse);
+        
+        sw.Stop();
+
+        return sw.Elapsed.ToString();
     }
 
     private static async Task<string> GetXmlStringFromResponseAsync(DownLoadFileInput input)
@@ -104,6 +114,7 @@ public class ParseXmlHelper : IParseXmlHelper
         using var client = new HttpClient();
         var response = await client.SendAsync(requestHttp);
 
+        response.Content.Headers.ContentType.CharSet = "Windows-1251";
         return await response.Content.ReadAsStringAsync();
     }
 
@@ -114,7 +125,8 @@ public class ParseXmlHelper : IParseXmlHelper
         var models =
             lstDto.Select(dto => new BuildingModel(dto.Id, dto.Name, dto.PartnerId));
 
-        await _buildingRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyBuildingsAsync(models);
+        //await _buildingRepository.InsertManyRecordsAsync(models);
     }
 
     private async Task ParseCardAsync(string xmlString)
@@ -122,10 +134,11 @@ public class ParseXmlHelper : IParseXmlHelper
         using var lstDto = ChoXmlReader<CardDto>.LoadText(xmlString).WithXPath("//card");
 
         var models =
-            lstDto.Select(dto => new CardModel(dto.LessonId, dto.Period, dto.Days, dto.Weeks, dto.Terms,
-                dto.ClassRoomIds));
+            lstDto.Select(dto => new CardModel(Guid.NewGuid().ToString(), dto.LessonId, dto.Period, dto.Days, dto.Weeks,
+                dto.Terms, dto.ClassRoomIds));
 
-        await _cardRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyCardsAsync(models);
+        //await _cardRepository.InsertManyAsync(models);
     }
     
     private async Task ParseClassesAsync(string xmlString)
@@ -136,7 +149,8 @@ public class ParseXmlHelper : IParseXmlHelper
             lstDto.Select(dto => new ClassModel(dto.Id, dto.Name, dto.Short, dto.ClassRoomIds,
                 dto.TeacherId, dto.Grade, dto.PartnerId));
 
-        await _classRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyClassesAsync(models);
+        //await _classRepository.InsertManyAsync(models);
     }
     
     private async Task ParseClassRoomsAsync(string xmlString)
@@ -147,7 +161,8 @@ public class ParseXmlHelper : IParseXmlHelper
             lstDto.Select(dto => new ClassRoomModel(dto.Id, dto.Name, dto.Short, dto.Capacity,
                 dto.BuildingId, dto.PartnerId));
 
-        await _classRoomRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyClassRoomsAsync(models);
+        //await _classRoomRepository.InsertManyAsync(models);
     }
     
     private async Task ParseDaysDefsAsync(string xmlString)
@@ -157,17 +172,18 @@ public class ParseXmlHelper : IParseXmlHelper
         var models =
             lstDto.Select(dto => new DaysDefModel(dto.Id, dto.Name, dto.Short, dto.Days));
 
-        await _daysDefRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyDaysDefsAsync(models);
+        //await _daysDefRepository.InsertManyAsync(models);
     }
     
     private async Task ParseGradesAsync(string xmlString)
     {
         using var lstDto = ChoXmlReader<GradeDto>.LoadText(xmlString).WithXPath("//grade");
 
-        var models =
-            lstDto.Select(dto => new GradeModel(dto.Grade, dto.Name, dto.Short));
+        var models = lstDto.Select(dto => new GradeModel(Guid.NewGuid().ToString(), dto.Grade, dto.Name, dto.Short));
 
-        await _gradeRoomRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyGradesAsync(models);
+        //await _gradeRepository.InsertManyAsync(models);
     }
     
     private async Task ParseGroupsAsync(string xmlString)
@@ -178,7 +194,8 @@ public class ParseXmlHelper : IParseXmlHelper
             lstDto.Select(dto => new GroupModel(dto.Id, dto.ClassId, dto.Name, dto.EntireClass,
                 dto.DivisionTag, dto.StudentCount, dto.StudentIds));
 
-        await _groupRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyGroupsAsync(models);
+        //await _groupRepository.InsertManyAsync(models);
     }
     
     private async Task ParseLessonsAsync(string xmlString)
@@ -190,7 +207,8 @@ public class ParseXmlHelper : IParseXmlHelper
                 dto.TeacherIds, dto.ClassRoomIds, dto.PeriodsPerCard, dto.PeriodsPerWeek, dto.DaysDefId,
                 dto.WeeksDefId, dto.TermsDefId, dto.SeminarGroup, dto.Capacity, dto.PartnerId));
 
-        await _lessonRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyLessonsAsync(models);
+        //await _lessonRepository.InsertManyAsync(models);
     }
     
     private async Task ParsePeriodsAsync(string xmlString)
@@ -198,9 +216,11 @@ public class ParseXmlHelper : IParseXmlHelper
         using var lstDto = ChoXmlReader<PeriodDto>.LoadText(xmlString).WithXPath("//period");
 
         var models =
-            lstDto.Select(dto => new PeriodModel(dto.Period, dto.Short, dto.StartTime, dto.EndTime));
+            lstDto.Select(dto =>
+                new PeriodModel(Guid.NewGuid().ToString(), dto.Period, dto.Short, dto.StartTime, dto.EndTime));
 
-        await _periodRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyPeriodsAync(models);
+        //await _periodRepository.InsertManyAsync(models);
     }
     
     private async Task ParseStudentsAsync(string xmlString)
@@ -211,7 +231,8 @@ public class ParseXmlHelper : IParseXmlHelper
             lstDto.Select(dto => new StudentModel(dto.Id, dto.ClassId, dto.Name, dto.Number, dto.Email,
                 dto.Mobile, dto.PartnerId, dto.FirstName, dto.LastName));
 
-        await _studentRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyStudentsAsync(models);
+        //wait _studentRepository.InsertManyAsync(models);
     }
     
     private async Task ParseStudentSubjectsAsync(string xmlString)
@@ -219,10 +240,11 @@ public class ParseXmlHelper : IParseXmlHelper
         using var lstDto = ChoXmlReader<StudentSubjectsDto>.LoadText(xmlString).WithXPath("//studentsubject");
 
         var models =
-            lstDto.Select(dto => new StudentSubjectsModel(dto.StudentId, dto.SubjectId, dto.SeminarGroup,
+            lstDto.Select(dto => new StudentSubjectsModel(Guid.NewGuid().ToString(), dto.StudentId, dto.SubjectId, dto.SeminarGroup,
                 dto.Importance, dto.AlternateFor));
 
-        await _studentSubjectsRepository.InsertManyAsync(models);
+        await _dapperRepository.InsetManyStudentSubjectsAsync(models);
+        //await _studentSubjectsRepository.InsertManyAsync(models);
     }
     
     private async Task ParseSubjectsAsync(string xmlString)
@@ -232,7 +254,8 @@ public class ParseXmlHelper : IParseXmlHelper
         var models =
             lstDto.Select(dto => new SubjectModel(dto.Id, dto.Name, dto.Short, dto.PartnerId));
 
-        await _subjectRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManySubjectsAsync(models);
+        //await _subjectRepository.InsertManyAsync(models);
     }
     
     private async Task ParseTeachersAsync(string xmlString)
@@ -243,7 +266,8 @@ public class ParseXmlHelper : IParseXmlHelper
             lstDto.Select(dto => new TeacherModel(dto.Id, dto.Name, dto.Short, dto.Gender, dto.Color,
                 dto.Email, dto.Mobile, dto.PartnerId, dto.FirstName, dto.LastName));
 
-        await _teacherRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyTeachersAsync(models);
+        //await _teacherRepository.InsertManyAsync(models);
     }
     
     private async Task ParseTermsDefsAsync(string xmlString)
@@ -253,7 +277,8 @@ public class ParseXmlHelper : IParseXmlHelper
         var models =
             lstDto.Select(dto => new TermsDefModel(dto.Id, dto.Name, dto.Short, dto.Terms));
 
-        await _termsDefRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyTermsDefsAsync(models);
+        //await _termsDefRepository.InsertManyAsync(models);
     }
     
     private async Task ParseWeeksDefsAsync(string xmlString)
@@ -263,12 +288,29 @@ public class ParseXmlHelper : IParseXmlHelper
         var models =
             lstDto.Select(dto => new WeeksDefModel(dto.Id, dto.Name, dto.Short, dto.Weeks));
 
-        await _weeksDefRepository.InsertManyAsync(models);
+        await _dapperRepository.InsertManyWeeksDefsAsync(models);
+        //await _weeksDefRepository.InsertManyAsync(models);
     }
 
     private async Task RemoveCurrentDataAsync()
     {
-        var buildings = await _buildingRepository.GetListAsync();
+        await _buildingRepository.DeleteAllRecordsAsync();
+        await _cardRepository.DeleteAllRecordsAsync();
+        await _classRepository.DeleteAllRecordsAsync();
+        await _classRoomRepository.DeleteAllRecordsAsync();
+        await _daysDefRepository.DeleteAllRecordsAsync();
+        await _gradeRepository.DeleteAllRecordsAsync();
+        await _groupRepository.DeleteAllRecordsAsync();
+        await _lessonRepository.DeleteAllRecordsAsync();
+        await _periodRepository.DeleteAllRecordsAsync();
+        await _studentRepository.DeleteAllRecordsAsync();
+        await _studentSubjectsRepository.DeleteAllRecordsAsync();
+        await _subjectRepository.DeleteAllRecordsAsync();
+        await _teacherRepository.DeleteAllRecordsAsync();
+        await _termsDefRepository.DeleteAllRecordsAsync();
+        await _weeksDefRepository.DeleteAllRecordsAsync();
+        
+        /*var buildings = await _buildingRepository.GetListAsync();
 
         if (buildings.Count > 0)
         {
@@ -303,11 +345,11 @@ public class ParseXmlHelper : IParseXmlHelper
             await _daysDefRepository.DeleteManyAsync(daysDefs.Select(models => models.Id));
         }
 
-        var grades = await _gradeRoomRepository.GetListAsync();
+        var grades = await _gradeRepository.GetListAsync();
 
         if (grades.Count > 0)
         {
-            await _gradeRoomRepository.DeleteManyAsync(grades.Select(models => models.Id));
+            await _gradeRepository.DeleteManyAsync(grades.Select(models => models.Id));
         }
 
         var groups = await _groupRepository.GetListAsync();
@@ -371,6 +413,6 @@ public class ParseXmlHelper : IParseXmlHelper
         if (weeksDefs.Count > 0)
         {
             await _weeksDefRepository.DeleteManyAsync(weeksDefs.Select(models => models.Id));
-        }
+        }*/
     }
 }

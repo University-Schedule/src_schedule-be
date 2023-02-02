@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using Volo.Abp.Domain.Entities;
+using Volo.Abp.Domain.Entities.Auditing;
 
 namespace Schedule.Models.Parser;
 
 [Table(ScheduleConsts.DbTablePrefix + "Grades")]
-public class GradeModel : Entity<string>
+public class GradeModel : CreationAuditedEntity<string>
 {
-    private readonly string _id = string.Empty;
-    private const int MaxIdLength = 16;
-    
+    public sealed override string Id { get; protected set; }
     public string Grade { get; set; }
     public string Name { get; set; }
     public string Short { get; set; }
@@ -18,11 +16,11 @@ public class GradeModel : Entity<string>
         
     }
 
-    public GradeModel(string grade, string name, string @short)
+    public GradeModel(string id, string grade, string name, string @short)
     {
+        Id = id;
         Grade = grade;
         Name = name;
         Short = @short;
-        Id = _id.GetStringId(MaxIdLength);
     }
 }
