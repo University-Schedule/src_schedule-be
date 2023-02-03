@@ -1,14 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Volo.Abp.Domain.Entities;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using Volo.Abp.Domain.Entities.Auditing;
 
 namespace Schedule.Models.Parser;
 
 [Table(ScheduleConsts.DbTablePrefix + "Cards")]
-public class CardModel : Entity<string>
+public class CardModel : CreationAuditedEntity<string>
 {
-    private readonly string _id = string.Empty;
-    private const int MaxIdLength = 16;
-    
+    public sealed override string Id { get; protected set; }
     public string LessonId { get; set; }
     public string Period { get; set; }
     public string Days { get; set; }
@@ -22,6 +21,7 @@ public class CardModel : Entity<string>
     }
 
     public CardModel(
+        string id,
         string lessonId,
         string period,
         string days,
@@ -29,12 +29,12 @@ public class CardModel : Entity<string>
         string terms,
         string classRoomIds)
     {
+        Id = id;
         LessonId = lessonId;
         Period = period;
         Days = days;
         Weeks = weeks;
         Terms = terms;
         ClassRoomIds = classRoomIds;
-        Id = _id.GetStringId(MaxIdLength);
     }
 }

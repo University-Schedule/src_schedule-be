@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authentication.Twitter;
@@ -23,7 +24,6 @@ using Volo.Abp.Account.Public.Web.Impersonation;
 using Volo.Abp.AspNetCore.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Autofac;
-using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
@@ -31,11 +31,11 @@ using Volo.Abp.Account;
 using Volo.Abp.Account.Public.Web.ExternalProviders;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
-using Microsoft.AspNetCore.Hosting;
 using Schedule.HealthChecks;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonX;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonX.Bundling;
 using Volo.Abp.AspNetCore.Serilog;
+using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Identity;
 using Volo.Abp.LeptonX.Shared;
 using Volo.Abp.Swashbuckle;
@@ -53,7 +53,8 @@ namespace Schedule;
     typeof(AbpAccountPublicWebImpersonationModule),
     typeof(AbpAccountPublicWebOpenIddictModule),
     typeof(AbpSwashbuckleModule),
-    typeof(AbpAspNetCoreSerilogModule)
+    typeof(AbpAspNetCoreSerilogModule),
+    typeof(AbpBackgroundWorkersModule)
     )]
 public class ScheduleHttpApiHostModule : AbpModule
 {
@@ -69,6 +70,18 @@ public class ScheduleHttpApiHostModule : AbpModule
             });
         });
     }
+    
+    /*public override async Task OnApplicationInitializationAsync(
+        ApplicationInitializationContext context)
+    {
+        await context.ServiceProvider
+            .GetRequiredService<IBackgroundWorkerManager>()
+            .AddAsync(
+                context
+                    .ServiceProvider
+                    .GetRequiredService<Test>()
+            );
+    }*/
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {

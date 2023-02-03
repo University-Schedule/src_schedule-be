@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Schedule.Domain\Schedule.Domain.csproj" />
     <ProjectReference Include="..\Schedule.Application.Contracts\Schedule.Application.Contracts.csproj" />
+    <ProjectReference Include="..\Schedule.EntityFrameworkCore\Schedule.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

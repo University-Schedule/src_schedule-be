@@ -35,6 +35,7 @@
     <ProjectReference Include="..\Schedule.Application\Schedule.Application.csproj" />
     <ProjectReference Include="..\Schedule.EntityFrameworkCore\Schedule.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Schedule.HttpApi\Schedule.HttpApi.csproj" />
+    <ProjectReference Include="..\Schedule.Worker.ParsePalesse\Schedule.Worker.ParsePalesse.csproj" />
   </ItemGroup>
 
   <ItemGroup>

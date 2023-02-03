@@ -1,4 +1,5 @@
 using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Uow;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -14,6 +15,7 @@ using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.TextTemplateManagement.EntityFrameworkCore;
 using Volo.Saas.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
+//using Volo.Abp.Dapper;
 using Volo.Abp.Gdpr;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
 
@@ -33,7 +35,8 @@ namespace Schedule.EntityFrameworkCore;
     typeof(SaasEntityFrameworkCoreModule),
     typeof(TextTemplateManagementEntityFrameworkCoreModule),
     typeof(AbpGdprEntityFrameworkCoreModule),
-    typeof(BlobStoringDatabaseEntityFrameworkCoreModule)
+    typeof(BlobStoringDatabaseEntityFrameworkCoreModule)//,
+    //typeof(AbpDapperModule)
     )]
 public class ScheduleEntityFrameworkCoreModule : AbpModule
 {

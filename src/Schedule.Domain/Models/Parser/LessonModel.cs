@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using Volo.Abp.Domain.Entities;
+using Volo.Abp.Domain.Entities.Auditing;
 
 namespace Schedule.Models.Parser;
 
 [Table(ScheduleConsts.DbTablePrefix + "Lessons")]
-public class LessonModel : Entity<string>
+public class LessonModel : CreationAuditedEntity<string>
 {
-    public string Id { get; }
+    public sealed override string Id { get; protected set; }
     public string SubjectId { get; set; }
     public string ClassIds { get; set; }
     public string GroupIds { get; set; }

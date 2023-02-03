@@ -5,7 +5,7 @@ namespace Schedule.Dtos.Parser;
 public class StudentsDto
 {
     [DisplayName("id")]
-    public string Id { get; }
+    public string Id { get; set; }
     
     [DisplayName("classid")]
     public string ClassId { get; set; }
