@@ -40,4 +40,12 @@ public class TeacherRepository : EfCoreRepository<ScheduleDbContext, TeacherMode
             .Distinct()
             .ToList();
     }
+
+    public async Task<bool> TeacherExistAsync(string teacher)
+    {
+        var userGroup = (await GetDbSetAsync())
+            .FirstOrDefault(x => x.Short.ToLower() == teacher.ToLower());
+
+        return userGroup != null;
+    }
 }

@@ -12,4 +12,6 @@ public interface ITeacherRepository : IRepository<TeacherModel, string>
     Task<List<string>> GetListTeachersByLetterAsync(string letter);
 
     Task<List<string>> GetListFirstLettersTeachersAsync();
+
+    Task<bool> TeacherExistAsync(string teacher);
 }

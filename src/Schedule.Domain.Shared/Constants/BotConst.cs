@@ -13,6 +13,7 @@ public class BotConst
     public const string MsgSaveTeacher = "Преподаватель выбран.";
     public const string MsgSaveGroup = "Группа выбрана.";
     public const string MsgWrongGroup = "Группа введена неверно. Попробуйте еще раз..";
+    public const string MsgWrongTeacher = "Преподаватель выбран неверно. Попробуйте еще раз..";
     public const string MsgMainMenu = "Главное меню";
     public const string MsgScheduleForToday = "📚 Расписание на сегодня";
     public const string MsgScheduleForTomorrow = "📚 Расписание на завтра";
