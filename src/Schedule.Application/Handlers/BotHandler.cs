@@ -133,7 +133,7 @@ public class BotHandler
 
         var keyboardLine = new List<KeyboardButton>();
 
-        for (var i = 0; i < firstLettersTeachers.Count(); i++)
+        for (var i = 0; i < firstLettersTeachers.Count; i++)
         {
             keyboardLine.Add(firstLettersTeachers[i]);
                
@@ -164,10 +164,11 @@ public class BotHandler
 
         var keyboardLine = new List<KeyboardButton>();
 
-        var countLines = (teachersByLetter.Count / BotConst.MaxColumns) == 0? 1 : teachersByLetter.Count / BotConst.MaxColumns;
-        var lines = countLines == 1 ? teachersByLetter.Count <= 6 ? 1 : 2 : countLines;
+        var lines = (teachersByLetter.Count / BotConst.MaxColumns) == 0? 1 : teachersByLetter.Count / BotConst.MaxColumns;
+        var oneOrTwoLines = teachersByLetter.Count <= 6 ? 1 : 2;
+        lines = lines == 1 ? oneOrTwoLines : lines;
 
-        for (var i = 0; i < teachersByLetter.Count(); i++)
+        for (var i = 0; i < teachersByLetter.Count; i++)
         {
             keyboardLine.Add(teachersByLetter[i]);
                
@@ -235,7 +236,7 @@ public class BotHandler
             EUserStep.ChoosingTeacherStepOne => await SendStartCommand(message, cancellationToken),
             EUserStep.ChoosingTeacherStepTwo => await SendChoosingTeacherLetterCommand(message, cancellationToken),
             EUserStep.EnteringGroupName => await SendStartCommand(message, cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(),
+            _ => await SendNotFoundCommand(message, cancellationToken),
         };
     }
     
