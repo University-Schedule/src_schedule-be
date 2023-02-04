@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Schedule.Models.Bot;
 using Schedule.Models.Parser;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -73,6 +74,9 @@ public class ScheduleDbContext :
     public virtual DbSet<StudentSubjectsModel> StudentSubjects { get; set; }
     public virtual DbSet<LessonModel> Lessons { get; set; }
     public virtual DbSet<CardModel> Cards { get; set; }
+    
+    // Bot
+    public virtual DbSet<TelegramUser> TelegramUsers { get; set; }
 
     #endregion
 

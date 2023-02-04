@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Schedule.Constants;
 using Schedule.EntityFrameworkCore;
 using Schedule.Interfaces;
 using Schedule.Models.Parser;
@@ -18,5 +21,13 @@ public class ClassRepository : EfCoreRepository<ScheduleDbContext, ClassModel, s
     {
         var dbContext = await GetDbContextAsync();
         await dbContext.Database.ExecuteSqlRawAsync("DELETE AppClasses");
+    }
+
+    public async Task<bool> GroupExistAsync(string group)
+    {
+        var userGroup = (await GetDbSetAsync())
+            .FirstOrDefault(x => x.Name.ToLower() == group.ToLower());
+
+        return userGroup != null;
     }
 }

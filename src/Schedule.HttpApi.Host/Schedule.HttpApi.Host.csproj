@@ -45,4 +45,8 @@
     <None Remove="Logs\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Files" />
+  </ItemGroup>
+
 </Project>
