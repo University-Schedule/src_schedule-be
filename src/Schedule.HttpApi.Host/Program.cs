@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Schedule.Controllers;
 using Schedule.Extensions;
+using Schedule.Handlers;
 using Schedule.Services;
 using Schedule.Settings;
 using Serilog;
@@ -56,9 +56,9 @@ public class Program
                     return new TelegramBotClient(options, httpClient);
                 });
 
-            builder.Services.AddScoped<UpdateHandlers>();
+            builder.Services.AddScoped<BotHandler>();
 
-            builder.Services.AddHostedService<ConfigureWebhook>();
+            builder.Services.AddHostedService<WebhookService>();
             
             builder.Host
                 .AddAppSettingsSecretsJson()

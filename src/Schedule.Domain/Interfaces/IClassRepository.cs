@@ -7,4 +7,6 @@ namespace Schedule.Interfaces;
 public interface IClassRepository : IRepository<ClassModel, string>
 {
     Task DeleteAllRecordsAsync();
+
+    Task<bool> GroupExistAsync(string group);
 }

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Schedule.Filters;
-using Schedule.Services;
+using Schedule.Handlers;
 using Telegram.Bot.Types;
 using Volo.Abp.AspNetCore.Mvc;
 
@@ -15,10 +15,10 @@ public class BotController : AbpController
     [ValidateTelegramBot]
     public async Task<IActionResult> Post(
         [FromBody] Update update,
-        [FromServices] UpdateHandlers handleUpdateService,
+        [FromServices] BotHandler botHandler,
         CancellationToken cancellationToken)
     {
-        await handleUpdateService.HandleUpdateAsync(update, cancellationToken);
+        await botHandler.HandleUpdateAsync(update, cancellationToken);
         return Ok();
     }
 }

@@ -11,14 +11,14 @@ using Telegram.Bot.Types.Enums;
 
 namespace Schedule.Services;
 
-public class ConfigureWebhook : IHostedService
+public class WebhookService : IHostedService
 {
-    private readonly ILogger<ConfigureWebhook> _logger;
+    private readonly ILogger<WebhookService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly BotConfiguration _botConfig;
 
-    public ConfigureWebhook(
-        ILogger<ConfigureWebhook> logger,
+    public WebhookService(
+        ILogger<WebhookService> logger,
         IServiceProvider serviceProvider,
         IOptions<BotConfiguration> botOptions)
     {

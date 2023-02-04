@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Schedule.Constants;
 using Schedule.EntityFrameworkCore;
 using Schedule.Interfaces;
 using Schedule.Models.Parser;
@@ -19,5 +22,22 @@ public class TeacherRepository : EfCoreRepository<ScheduleDbContext, TeacherMode
     {
         var dbContext = await GetDbContextAsync();
         await dbContext.Database.ExecuteSqlRawAsync("DELETE AppTeachers");
+    }
+
+    public async Task<List<string>> GetListTeachersByLetterAsync(string letter)
+    {
+        return (await GetDbSetAsync())
+            .Where(x => x.Short.StartsWith(letter) && !x.Short.Contains(BotConst.Cathedra))
+            .Select(s => s.Short)
+            .ToList();
+    }
+    
+    public async Task<List<string>> GetListFirstLettersTeachersAsync()
+    {
+        return (await GetDbSetAsync())
+            .Where(x => !x.Short.Contains(BotConst.Cathedra))
+            .Select(s => s.Short.Substring(0,1))
+            .Distinct()
+            .ToList();
     }
 }
