@@ -1,6 +1,6 @@
 ﻿namespace Schedule.Constants;
 
-public class BotConst
+public static class BotConst
 {
     public const string BtnBack = "Назад";
     public const string BtnStudent = "Студент";
