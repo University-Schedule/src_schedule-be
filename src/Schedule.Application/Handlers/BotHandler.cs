@@ -22,10 +22,11 @@ public class BotHandler
     private readonly ITelegramUserRepository _telegramUserRepository;
     private readonly IClassRepository _classRepository;
 
-    public BotHandler(ITelegramBotClient botClient, 
+    public BotHandler(
         ITeacherRepository teacherRepository, 
         ITelegramUserRepository telegramUserRepository, 
-        IClassRepository classRepository)
+        IClassRepository classRepository,
+        ITelegramBotClient botClient) 
     {
         _botClient = botClient;
         _teacherRepository = teacherRepository;
@@ -37,9 +38,9 @@ public class BotHandler
     {
         var handler = update switch
         {
-            { Message: { } message }                       => BotOnMessageReceived(message, cancellationToken),
-            { EditedMessage: { } message }                 => BotOnMessageReceived(message, cancellationToken),
-            _                                              => UnknownUpdateHandlerAsync(update, cancellationToken)
+            { Message: { } message } => BotOnMessageReceived(message, cancellationToken),
+            { EditedMessage: { } message } => BotOnMessageReceived(message, cancellationToken),
+            _ => UnknownUpdateHandlerAsync(update, cancellationToken)
         };
 
         await handler;
@@ -49,22 +50,83 @@ public class BotHandler
     {
         if (message.Text is not { } messageText) return;
 
+        await SendChatTypingAsync(message, cancellationToken);
+        
         var action = messageText switch
         {
-            BotConst.CmdStart => SendStartKeyboardCommand(_botClient, message, cancellationToken),
-            BotConst.BtnStudent => ChooseGroupCommand(_botClient, message, cancellationToken),
-            BotConst.BtnTeacher => ChooseTeacherLetterCommand(_botClient, message, cancellationToken),
-            BotConst.BtnBack => BackCommand(_botClient, message, cancellationToken),
-            _ => StepCommand(_botClient, message, cancellationToken)
+            BotConst.CmdStart => SendStartCommand(message, cancellationToken),
+            BotConst.BtnStudent => SendGroupEntryCommand(message, cancellationToken),
+            BotConst.BtnTeacher => SendChoosingTeacherLetterCommand(message, cancellationToken),
+            BotConst.BtnBack => SendBackCommand(message, cancellationToken),
+            _ => SelectCommandByStep(message, cancellationToken)
         };
         
         Message sentMessage = await action;
     }
 
-    private async Task<Message> ChooseTeacherLetterCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    private async Task<Message> SelectCommandByStep(Message message, CancellationToken cancellationToken)
     {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
+        if (!await CheckUserExistAsync(message.From))
+        {
+            return await SendStartCommand(message, cancellationToken);
+        }
+        
+        var step = await _telegramUserRepository.GetUserStepAsync(message.From!.Id);
+        
+        return step switch 
+        {
+            EUserStep.ChoosingTeacherStepOne => await SendChoosingTeacherCommand(message, cancellationToken),
+            EUserStep.ChoosingTeacherStepTwo => await SendTeacherSaveCommand(message, cancellationToken),
+            EUserStep.EnteringGroupName => await SendGroupSaveCommand(message, cancellationToken),
+            EUserStep.Start => await SendStartCommand(message, cancellationToken),
+            _ => await SendNotFoundCommand(message, cancellationToken),
+        };
+    }
 
+    private async Task<Message> SendStartCommand(Message message, CancellationToken cancellationToken)
+    {
+        await CreateTelegramUserAsync(message.From);
+            
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ( new[] { new KeyboardButton[] { BotConst.BtnStudent, BotConst.BtnTeacher } })
+        {
+            ResizeKeyboard = true
+        };
+
+        return await SendTextMessageAsync(message, BotConst.MsgWhoAreYou, replyKeyboardMarkup, cancellationToken);
+    }
+    
+    private async Task<Message> SendGroupEntryCommand(Message message, CancellationToken cancellationToken)
+    {
+        await _telegramUserRepository.UpdateUserStepAsync(message.From!.Id, EUserStep.EnteringGroupName);
+        
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ( new[] { new KeyboardButton[] { BotConst.BtnBack } })
+        {
+            ResizeKeyboard = true
+        };
+        
+        return await SendTextMessageAsync(message, BotConst.MsgEnterGroup, replyKeyboardMarkup, cancellationToken);
+    }
+    
+    private async Task<Message> SendGroupSaveCommand(Message message, CancellationToken cancellationToken)
+    {
+        var groupExist = await _classRepository.GroupExistAsync(message.Text);
+
+        if (!groupExist)
+        {
+            return await SendTextMessageAsync(message, BotConst.MsgWrongGroup, null, cancellationToken);
+        }
+        
+        await _telegramUserRepository.SetGroupAsync(message.From!.Id, message.Text);
+        
+        await _telegramUserRepository.UpdateUserStepAsync(message.From!.Id, EUserStep.MainMenu);
+        
+        await SendTextMessageAsync(message, BotConst.MsgSaveGroup, null, cancellationToken);
+
+        return await SendMainMenuCommand(message, cancellationToken);
+    }
+
+    private async Task<Message> SendChoosingTeacherLetterCommand(Message message, CancellationToken cancellationToken)
+    {
         var firstLettersTeachers = await _teacherRepository.GetListFirstLettersTeachersAsync();
 
         var telegramKeyboard = new List<List<KeyboardButton>>();
@@ -91,28 +153,11 @@ public class BotHandler
             ResizeKeyboard = true
         };
         
-        return await SendTextMessageAsync(botClient, message, BotConst.MsgEnterTeacherLetter, replyKeyboardMarkup, cancellationToken);
+        return await SendTextMessageAsync(message, BotConst.MsgEnterTeacherLetter, replyKeyboardMarkup, cancellationToken);
     }
 
-    private async Task<Message> BackCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    private async Task<Message> SendChoosingTeacherCommand(Message message, CancellationToken cancellationToken)
     {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
-
-        var step = await _telegramUserRepository.GetUserStepAsync(message.From!.Id);
-
-        return step switch 
-        {
-            EUserStep.ChoosingTeacherStepOne => await SendStartKeyboardCommand(botClient, message, cancellationToken),
-            EUserStep.ChoosingTeacherStepTwo => await ChooseTeacherLetterCommand(botClient, message, cancellationToken),
-            EUserStep.EnteringGroupName => await SendStartKeyboardCommand(botClient, message, cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(),
-        };
-    }
-
-    private async Task<Message> ChooseTeacherCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-    {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
-
         var teachersByLetter = await _teacherRepository.GetListTeachersByLetterAsync(message.Text);
         
         var telegramKeyboard = new List<List<KeyboardButton>>();
@@ -142,60 +187,28 @@ public class BotHandler
             ResizeKeyboard = true
         };
         
-        return await SendTextMessageAsync(botClient, message, BotConst.MsgEnterTeacher, replyKeyboardMarkup, cancellationToken);
-    }
-
-    private async Task<Message> StepCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-    {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
-
-        if (!await CheckUserExist(message.From))
-        {
-            return await SendStartKeyboardCommand(botClient, message, cancellationToken);
-        }
-        
-        var step = await _telegramUserRepository.GetUserStepAsync(message.From!.Id);
-        
-        return step switch 
-        {
-            EUserStep.ChoosingTeacherStepOne => await ChooseTeacherCommand(botClient, message, cancellationToken),
-            EUserStep.ChoosingTeacherStepTwo => await SaveTeacherCommand(botClient, message, cancellationToken),
-            EUserStep.EnteringGroupName => await SaveGroupCommand(botClient, message, cancellationToken),
-            EUserStep.Start => await SendStartKeyboardCommand(botClient, message, cancellationToken),
-            _ => await SendNotFoundCommand(botClient, message, cancellationToken),
-        };
-    }
-
-    private async Task<Message> SendNotFoundCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-    {
-        return await SendTextMessageAsync(botClient, message, "🤔", null, cancellationToken);
+        return await SendTextMessageAsync(message, BotConst.MsgEnterTeacher, replyKeyboardMarkup, cancellationToken);
     }
     
-    private async Task<Message> SaveGroupCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    private async Task<Message> SendTeacherSaveCommand(Message message, CancellationToken cancellationToken)
     {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
+        var teacherExist = await _teacherRepository.TeacherExistAsync(message.Text);
 
-        var group = await _classRepository.GroupExistAsync(message.Text);
-
-        if (!group)
+        if (!teacherExist)
         {
-           return await botClient.SendTextMessageAsync(
-                chatId: message.Chat.Id,
-                text: BotConst.MsgWrongGroup,
-                replyMarkup: null,
-                cancellationToken: cancellationToken);
+            return await SendTextMessageAsync(message, BotConst.MsgWrongTeacher, null, cancellationToken);
         }
         
-        await _telegramUserRepository.SetGroupAsync(message.From!.Id, message.Text);
+        await _telegramUserRepository.SetTeacherAsync(message.From!.Id, message.Text);
         
         await _telegramUserRepository.UpdateUserStepAsync(message.From!.Id, EUserStep.MainMenu);
         
-        await SendTextMessageAsync(botClient, message, BotConst.MsgSaveGroup, null, cancellationToken);
-
-        return await GetMainMenu(botClient, message, cancellationToken);
+        await SendTextMessageAsync(message, BotConst.MsgSaveTeacher, null, cancellationToken);
+        
+        return await SendMainMenuCommand(message, cancellationToken);
     }
-
-    private async Task<Message> GetMainMenu(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    
+    private async Task<Message> SendMainMenuCommand(Message message, CancellationToken cancellationToken)
     {
         ReplyKeyboardMarkup replyKeyboardMarkup = new(
             new[]
@@ -210,70 +223,47 @@ public class BotHandler
             ResizeKeyboard = true
         };
 
-        return await SendTextMessageAsync(botClient, message, BotConst.MsgMainMenu, replyKeyboardMarkup, cancellationToken);
+        return await SendTextMessageAsync(message, BotConst.MsgMainMenu, replyKeyboardMarkup, cancellationToken);
     }
 
-    private async Task<Message> SaveTeacherCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    private async Task<Message> SendBackCommand(Message message, CancellationToken cancellationToken)
     {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
+        var step = await _telegramUserRepository.GetUserStepAsync(message.From!.Id);
 
-        await _telegramUserRepository.SetTeacherAsync(message.From!.Id, message.Text);
-        
-        await _telegramUserRepository.UpdateUserStepAsync(message.From!.Id, EUserStep.MainMenu);
-        
-        await SendTextMessageAsync(botClient, message, BotConst.MsgSaveTeacher, null, cancellationToken);
-        
-        return await GetMainMenu(botClient, message, cancellationToken);
-    }
-
-    private async Task<Message> ChooseGroupCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-    {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
-
-        await _telegramUserRepository.UpdateUserStepAsync(message.From!.Id, EUserStep.EnteringGroupName);
-        
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ( new[] { new KeyboardButton[] { BotConst.BtnBack } })
+        return step switch 
         {
-            ResizeKeyboard = true
+            EUserStep.ChoosingTeacherStepOne => await SendStartCommand(message, cancellationToken),
+            EUserStep.ChoosingTeacherStepTwo => await SendChoosingTeacherLetterCommand(message, cancellationToken),
+            EUserStep.EnteringGroupName => await SendStartCommand(message, cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(),
         };
-        
-        return await SendTextMessageAsync(botClient, message, BotConst.MsgEnterGroup, replyKeyboardMarkup, cancellationToken);
+    }
+    
+    private async Task<Message> SendNotFoundCommand(Message message, CancellationToken cancellationToken)
+    {
+        return await SendTextMessageAsync(message, "🤔", null, cancellationToken);
+    }
+    
+    private async Task<Message> SendTextMessageAsync(Message message, string text, [CanBeNull] IReplyMarkup replyMarkup, CancellationToken cancellationToken)
+    {
+        return await _botClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            text: text,
+            replyMarkup: replyMarkup,
+            cancellationToken: cancellationToken);
     }
 
-    private async Task<Message> SendStartKeyboardCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    private async Task SendChatTypingAsync(Message message, CancellationToken cancellationToken)
     {
-        await SendChatTypingAsync(botClient, message, cancellationToken);
-
-        await CreateTelegramUser(message.From);
-            
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ( new[] { new KeyboardButton[] { BotConst.BtnStudent, BotConst.BtnTeacher } })
-        {
-            ResizeKeyboard = true
-        };
-
-        return await SendTextMessageAsync(botClient, message, BotConst.MsgWhoAreYou, replyKeyboardMarkup, cancellationToken);
-    }
-
-    private async Task SendChatTypingAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-    {
-        await botClient.SendChatActionAsync(
+        await _botClient.SendChatActionAsync(
             chatId: message.Chat.Id,
             chatAction: ChatAction.Typing,
             cancellationToken: cancellationToken);
     }
 
-    private async Task<Message> SendTextMessageAsync(ITelegramBotClient botClient, Message message, string msg, [CanBeNull] IReplyMarkup replyMarkup, CancellationToken cancellationToken)
+    private async Task CreateTelegramUserAsync(User user)
     {
-        return await botClient.SendTextMessageAsync(
-            chatId: message.Chat.Id,
-            text: msg,
-            replyMarkup: replyMarkup,
-            cancellationToken: cancellationToken);
-    }
-
-    private async Task CreateTelegramUser(User user)
-    {
-        if (!await CheckUserExist(user))
+        if (!await CheckUserExistAsync(user))
         {
             await _telegramUserRepository.InsertAsync(new TelegramUser()
             {
@@ -293,11 +283,9 @@ public class BotHandler
         await _telegramUserRepository.UpdateUserStepAsync(telegramUser.TelegramId, EUserStep.Start);
     }
     
-    private async Task<bool> CheckUserExist(User user)
+    private async Task<bool> CheckUserExistAsync(User user)
     {
-        var telegramUser = await _telegramUserRepository.GetByTelegramIdAsync(user.Id);
-
-        return telegramUser is not null;
+        return await _telegramUserRepository.GetByTelegramIdAsync(user.Id) is not null;
     }
 
     private Task UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
