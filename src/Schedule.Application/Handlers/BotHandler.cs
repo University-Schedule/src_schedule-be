@@ -149,6 +149,11 @@ public class BotHandler
     {
         await SendChatTypingAsync(botClient, message, cancellationToken);
 
+        if (!await CheckUserExist(message.From))
+        {
+            return await SendStartKeyboardCommand(botClient, message, cancellationToken);
+        }
+        
         var step = await _telegramUserRepository.GetUserStepAsync(message.From!.Id);
         
         return step switch 
@@ -156,10 +161,16 @@ public class BotHandler
             EUserStep.ChoosingTeacherStepOne => await ChooseTeacherCommand(botClient, message, cancellationToken),
             EUserStep.ChoosingTeacherStepTwo => await SaveTeacherCommand(botClient, message, cancellationToken),
             EUserStep.EnteringGroupName => await SaveGroupCommand(botClient, message, cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(),
+            EUserStep.Start => await SendStartKeyboardCommand(botClient, message, cancellationToken),
+            _ => await SendNotFoundCommand(botClient, message, cancellationToken),
         };
     }
 
+    private async Task<Message> SendNotFoundCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        return await SendTextMessageAsync(botClient, message, "🤔", null, cancellationToken);
+    }
+    
     private async Task<Message> SaveGroupCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
         await SendChatTypingAsync(botClient, message, cancellationToken);
@@ -255,16 +266,14 @@ public class BotHandler
     {
         return await botClient.SendTextMessageAsync(
             chatId: message.Chat.Id,
-            text: BotConst.MsgWhoAreYou,
+            text: msg,
             replyMarkup: replyMarkup,
             cancellationToken: cancellationToken);
     }
-    
+
     private async Task CreateTelegramUser(User user)
     {
-        var telegramUser = await _telegramUserRepository.GetByTelegramIdAsync(user.Id);
-
-        if (telegramUser is null)
+        if (!await CheckUserExist(user))
         {
             await _telegramUserRepository.InsertAsync(new TelegramUser()
             {
@@ -280,7 +289,15 @@ public class BotHandler
             return;
         }
 
+        var telegramUser = await _telegramUserRepository.GetByTelegramIdAsync(user.Id);
         await _telegramUserRepository.UpdateUserStepAsync(telegramUser.TelegramId, EUserStep.Start);
+    }
+    
+    private async Task<bool> CheckUserExist(User user)
+    {
+        var telegramUser = await _telegramUserRepository.GetByTelegramIdAsync(user.Id);
+
+        return telegramUser is not null;
     }
 
     private Task UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
