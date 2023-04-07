@@ -1,5 +1,16 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using Microsoft.Extensions.DependencyInjection;
+using Schedule.TBot.Answers;
 
-using Microsoft.Extensions.DependencyInjection;
+var serviceCollection = new ServiceCollection();
+var serviceProvider = serviceCollection.BuildServiceProvider();
 
-var serviceProvider = new ServiceCollection();
+
+//await StartAsync(x =>
+//{
+//    x.Default<MainMenuAnswerHandler>();
+//});
+
+
+var scope = serviceProvider.CreateScope();
+//scope.ServiceProvider.GetService<...>
+scope.Dispose();
