@@ -5,8 +5,10 @@
         private Type _defaultHandler;
         private Dictionary<string, Type> _commandHandlers = new();
         private Dictionary<string, Type> _textHandlers = new();
+        private string _token;
 
         public Type DefaultHandler => _defaultHandler;
+        public string Token => _token;
         public Type GetCommandHandler(string command)
         {
             _commandHandlers.TryGetValue(command, out var handler);
@@ -23,9 +25,12 @@
             _defaultHandler = typeof(T);
         }
 
-        public void Command<T>(string command)
+        public void Command<T>(params string[] commands)
         {
-            _commandHandlers.Add(command, typeof(T));
+            foreach (var command in commands)
+            {
+                _commandHandlers.Add(command, typeof(T));
+            }
         }
 
         public void Text<T>(params string[] texts)
@@ -34,6 +39,11 @@
             {
                 _textHandlers.Add(text, typeof(T));
             }
+        }
+
+        public void SetToken(string token)
+        {
+            _token = tiken;
         }
     }
 }

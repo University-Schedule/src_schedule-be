@@ -15,7 +15,9 @@ namespace Schedule.TBot.Framework.Handlers
             return new RedirectTo(typeof(T));
         }
 
-        protected IAnswerResult RedirectTo<T, TPayload>(TPayload payload) where T : AnswerQueryHandler<TPayload>
+        protected IAnswerResult RedirectTo<T, TPayload>(TPayload payload) 
+            where T : AnswerPayloadHandler<TPayload> 
+            where TPayload : IPayload
         {
             return new RedirectTo(typeof(T), payload);
         }
@@ -25,14 +27,23 @@ namespace Schedule.TBot.Framework.Handlers
             return new RedirectReceiving(typeof(T));
         }
 
-        protected async Task AnswerAsync(string text, ReplyKeyboardMarkup keyboard = null)
+        protected IAnswerResult RedirectReceiving<T, TPayload>(TPayload payload)
+         where T : AnswerPayloadHandler<TPayload>
+         where TPayload : IPayload
+        {
+            return new RedirectReceiving(typeof(T), payload);
+        }
+
+        protected async Task AnswerAsync(string text, ReplyMarkupBase keyboard = null)
         {
             //handle actions keyboards
-            if (keyboard is not null)
+            if (keyboard is ReplyKeyboardMarkup replyKeyboard && replyKeyboard is not null)
             {
-                await AnswerContext.RegisterReplyKeyboardAsync(AnswerContext.UserId, keyboard);
+                await AnswerContext.RegisterReplyKeyboardAsync(AnswerContext.UserId, replyKeyboard);
             }
             await AnswerContext.BotClient.SendTextMessageAsync(AnswerContext.UserId, text, replyMarkup: keyboard);
         }
+
+        
     }
 }

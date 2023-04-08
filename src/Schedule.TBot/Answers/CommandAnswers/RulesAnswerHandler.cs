@@ -1,17 +1,15 @@
 ﻿using Schedule.TBot.Framework;
 using Schedule.TBot.Framework.AnswerResults;
 using Schedule.TBot.Framework.Handlers;
-using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Schedule.TBot.Answers
+namespace Schedule.TBot.Answers.CommandAnswers
 {
-    public sealed class HelloAnswerHandler : AnswerHandler
+    public sealed class RulesAnswerHandler : AnswerHandler
     {
         public async override Task<IAnswerResult> HandleAsync(MessageContext context)
         {
-            await AnswerAsync("Hello my friend!!!");
-
-            return Ok;
+            await AnswerAsync("Rules: TODO");
+            return RedirectTo<MenuAnswerHandler>();
         }
     }
 }

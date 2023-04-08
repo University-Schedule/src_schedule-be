@@ -9,29 +9,28 @@ using Schedule.TBot.Framework.Handlers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Schedule.TBot.Utils;
+using Schedule.TBot.Answers.TextAnswers;
+using Schedule.TBot.Answers.CommandAnswers;
+using Schedule.TBot.Extensions;
 
 var serviceCollection = new ServiceCollection();
-serviceCollection.AddScoped<MainMenuAnswerHandler>();
-serviceCollection.AddScoped<RulesAnswerHandler>();
-serviceCollection.AddScoped<TestAnswerHandler>();
-serviceCollection.AddScoped<PaginationExampleAnswerHandler>();
-serviceCollection.AddScoped<HelloAnswerHandler>();
+serviceCollection.RegisterAnswerHandlers();
 
 var serviceProvider = serviceCollection.BuildServiceProvider();
 var memoryCache = new MemoryCache(new MemoryCacheOptions());
 
-//http://t.me/net_framework_bot
-var botClient = new TelegramBotClient("6114166319:AAEokZNZlR3EuQ7SoYQKuJdGzzUUqf_Alno");
 
 await StartAsync(x =>
 {
-    x.Default<MainMenuAnswerHandler>();
-    x.Command<MainMenuAnswerHandler>("menu");
-    x.Text<HelloAnswerHandler>("hi", "hello");
+    x.SetToken("6114166319:AAEokZNZlR3EuQ7SoYQKuJdGzzUUqf_Alno"); //http://t.me/net_framework_bot
+    x.Default<MenuAnswerHandler>();
+    x.Command<MenuAnswerHandler>("menu");
+    x.Command<RulesAnswerHandler>("rules", "rule", "правила");
+    x.Text<HelloExampleAnswerHandler>("hi", "hello");
 });
 
 Console.ReadLine();
-
 
 
 //BOT FRAMEWORK
@@ -40,8 +39,15 @@ Task StartAsync(Action<BotActionConfiguration> configure, CancellationToken canc
     var configuration = new BotActionConfiguration();
     configure(configuration);
 
+    if (string.IsNullOrEmpty(configuration.Token))
+    {
+        throw new ArgumentException("Token not provided");
+    }
+
+    var botClient = new TelegramBotClient(configuration.Token);
+
     botClient.StartReceiving(
-        updateHandler: async (ITelegramBotClient botClient, Update update, CancellationToken cancellationToken) => await HandleMessageAsync(configuration, update?.Message),
+        updateHandler: async (ITelegramBotClient botClient, Update update, CancellationToken cancellationToken) => await HandleMessageAsync(botClient, configuration, update?.Message),
         pollingErrorHandler: (ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask,
         receiverOptions: new() { AllowedUpdates = Array.Empty<UpdateType>() },
         cancellationToken: cancellationToken
@@ -49,7 +55,7 @@ Task StartAsync(Action<BotActionConfiguration> configure, CancellationToken canc
     return Task.CompletedTask;
 }
 
-async Task HandleMessageAsync(BotActionConfiguration configuration, Message message)
+async Task HandleMessageAsync(ITelegramBotClient botClient, BotActionConfiguration configuration, Message message)
 {
     var scope = serviceProvider.CreateScope();
 
@@ -62,16 +68,16 @@ async Task HandleMessageAsync(BotActionConfiguration configuration, Message mess
         };
 
         var (currentType, payload) = ResolveCurrentType(answerContext, message.Text, configuration);
-        await HandleType(scope, currentType!, payload, answerContext);
+        await HandleTypeAsync(scope, currentType!, payload, answerContext, message);
     }
 
     scope.Dispose();
 }
 
-(Type, object) ResolveCurrentType(AnswerContext answerContext, string messageText, BotActionConfiguration configuration)
+(Type, IPayload) ResolveCurrentType(AnswerContext answerContext, string messageText, BotActionConfiguration configuration)
 {
     Type currentType = null;
-    object payload = null;
+    IPayload payload = null;
 
     //check if user click on KeyboardActionButton
     if (memoryCache.TryGetValue($"{answerContext.UserId}_KEYBOARD", out Dictionary<string, RedirectionPayload> buttonsRedirections))
@@ -88,10 +94,11 @@ async Task HandleMessageAsync(BotActionConfiguration configuration, Message mess
     if (currentType is null)
     {
         //check if user has RedirectReceiving
-        if (memoryCache.TryGetValue(answerContext.UserId, out Type resolvedType))
+        if (memoryCache.TryGetValue(answerContext.UserId, out RedirectionPayload resolvedType))
         {
             memoryCache.Remove(answerContext.UserId);
-            currentType = resolvedType!;
+            currentType = resolvedType.Type!;
+            payload = resolvedType.Payload; 
         }
         //defult
         else
@@ -114,33 +121,29 @@ async Task HandleMessageAsync(BotActionConfiguration configuration, Message mess
     return (currentType, payload);
 }
 
-async Task HandleType(IServiceScope scope, Type currentType, object payload, AnswerContext context)
+async Task HandleTypeAsync(IServiceScope scope, Type currentType, IPayload payload, AnswerContext context, Message message)
 {
     if (scope.ServiceProvider.GetService(currentType) is BaseAnswerHandler currentHandler)
     {
         currentHandler.AnswerContext = context;
-        IAnswerResult? result = null;
+        var messageContext = new MessageContext() { Text = message.Text, UserId = context.UserId };
 
-        //resolve answer handler
-        if (currentHandler is AnswerHandler answerHandler)
+        IAnswerResult? result = currentHandler switch
         {
-            result = await answerHandler.HandleAsync(new MessageContext());
-        }
-        if (currentHandler is not AnswerHandler)
-        {
-            //TODO: refactor IQuery instead object
-            result = await (Task<IAnswerResult?>)currentHandler.GetType().GetMethod(nameof(AnswerQueryHandler<object>.HandleAsync))
-                .Invoke(currentHandler, new object[2] { new MessageContext(), payload });
-        }
+            AnswerHandler handler => await handler.HandleAsync(messageContext),
+            _ when TypeUtils.IsSubclassOfRawGeneric(typeof(AnswerPayloadHandler<>), currentType) => 
+                await (Task<IAnswerResult?>)currentHandler.GetType().GetMethod(nameof(AnswerPayloadHandler<IPayload>.HandleAsync)).Invoke(currentHandler, new object[] { messageContext, payload }),
+            _ => new OkResult()
+        };
 
         //handle result
         if (result is RedirectTo redirectTo)
         {
-            await HandleType(scope, redirectTo.RedirectType, redirectTo.Payload, context);
+            await HandleTypeAsync(scope, redirectTo.RedirectType, redirectTo.Payload, context, message);
         }
         else if (result is RedirectReceiving redirectReceiving)
         {
-            memoryCache.Set(context.UserId, redirectReceiving.RedirectType);
+            memoryCache.Set(context.UserId, new RedirectionPayload { Type = redirectReceiving.RedirectType, Payload = redirectReceiving.Payload });
         }
     }
 }
@@ -161,8 +164,3 @@ async Task RegisterReplyKeyboardAsync(long userId, ReplyKeyboardMarkup replyKeyb
     memoryCache.Set($"{userId}_KEYBOARD", buttonsRedirections);
 }
 
-public sealed class RedirectionPayload
-{
-    public Type Type { get; set; }
-    public object Payload { get; set; }
-}

@@ -2,15 +2,14 @@
 using Schedule.TBot.Framework.AnswerResults;
 using Schedule.TBot.Framework.Handlers;
 
-namespace Schedule.TBot.Answers
+namespace Schedule.TBot.Answers.TextAnswers
 {
-    public sealed class TestAnswerHandler : AnswerHandler
+    public sealed class HelloExampleAnswerHandler : AnswerHandler
     {
         public async override Task<IAnswerResult> HandleAsync(MessageContext context)
         {
-            await AnswerAsync("In test...");
-
-            return RedirectTo<MainMenuAnswerHandler>(); ;
+            await AnswerAsync("Hello my friend!");
+            return Ok;
         }
     }
 }

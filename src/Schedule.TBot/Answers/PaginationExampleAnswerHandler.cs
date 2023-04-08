@@ -6,17 +6,17 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Schedule.TBot.Answers
 {
-    public sealed class PaginationExampleAnswerHandler : AnswerQueryHandler<SimplePagedQuery>
+    public sealed class PaginationExampleAnswerHandler : AnswerPayloadHandler<SimplePagedPayload>
     {
-        public async override Task<IAnswerResult> HandleAsync(MessageContext context, SimplePagedQuery query)
+        public async override Task<IAnswerResult> HandleAsync(MessageContext context, SimplePagedPayload query)
         {
             ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
                 {
                     new KeyboardButton[]
                     {
-                        new KeyboardActionButton("<", RedirectTo<PaginationExampleAnswerHandler, SimplePagedQuery>(new SimplePagedQuery() { Skip = query?.Skip - 1 ?? 0 })),
-                        "Call me ☎️" ,
-                        new KeyboardActionButton(">", RedirectTo<PaginationExampleAnswerHandler, SimplePagedQuery>(new SimplePagedQuery() { Skip = query?.Skip + 1 ?? 0 })),
+                        new KeyboardActionButton("<", RedirectTo<PaginationExampleAnswerHandler, SimplePagedPayload>(new SimplePagedPayload() { Skip = query?.Skip - 1 ?? 0 })),
+                        "Just Text ☎️" ,
+                        new KeyboardActionButton(">", RedirectTo<PaginationExampleAnswerHandler, SimplePagedPayload>(new SimplePagedPayload() { Skip = query?.Skip + 1 ?? 0 })),
                     }
                 })
             {
@@ -29,7 +29,7 @@ namespace Schedule.TBot.Answers
         }
     }
 
-    public class SimplePagedQuery
+    public class SimplePagedPayload : IPayload
     {
         public int Take { get; set; }
         public int Skip { get; set; }
