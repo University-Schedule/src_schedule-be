@@ -1,12 +1,33 @@
 ﻿using Schedule.TBot.Framework;
+using Schedule.TBot.Framework.AnswerResults;
+using Schedule.TBot.Framework.Handlers;
+using Schedule.TBot.Framework.Keyboard;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Schedule.TBot.Answers
 {
-    public class MainMenuAnswerHandler : AnswerHandler
+    public sealed class MainMenuAnswerHandler : AnswerHandler
     {
-        public override Task HandleAsync()
+        public async override Task<IAnswerResult> HandleAsync(MessageContext context)
         {
-            return Task.CompletedTask;
+            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+                {
+                    new KeyboardButton[]
+                    {
+                        new KeyboardActionButton("Help me", RedirectTo<RulesAnswerHandler>()),
+                        new KeyboardActionButton("Pagination", RedirectTo<PaginationExampleAnswerHandler, SimplePagedQuery>(new SimplePagedQuery() { Skip = 5 })),
+                        "Call me ☎️" 
+                    }
+                })
+            {
+                ResizeKeyboard = true
+            };
+
+            await AnswerAsync("Hi!", replyKeyboardMarkup);
+
+            return Ok;
+
+            //return RedirectTo<RulesAnswerHandler>();
         }
     }
 }
