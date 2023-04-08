@@ -23,7 +23,7 @@ namespace Schedule.TBot.Answers
                 ResizeKeyboard = true
             };
 
-            await AnswerAsync("Hi!", replyKeyboardMarkup);
+            await AnswerAsync((query?.Skip ?? 0).ToString(), replyKeyboardMarkup);
 
             return Ok;
         }

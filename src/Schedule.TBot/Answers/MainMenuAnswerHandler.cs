@@ -23,11 +23,9 @@ namespace Schedule.TBot.Answers
                 ResizeKeyboard = true
             };
 
-            await AnswerAsync("Hi!", replyKeyboardMarkup);
+            await AnswerAsync("Main menu!", replyKeyboardMarkup);
 
             return Ok;
-
-            //return RedirectTo<RulesAnswerHandler>();
         }
     }
 }

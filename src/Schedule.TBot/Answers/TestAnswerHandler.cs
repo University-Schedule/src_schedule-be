@@ -8,9 +8,9 @@ namespace Schedule.TBot.Answers
     {
         public async override Task<IAnswerResult> HandleAsync(MessageContext context)
         {
-            Console.WriteLine(3);
+            await AnswerAsync("In test...");
 
-            return Ok;
+            return RedirectTo<MainMenuAnswerHandler>(); ;
         }
     }
 }
