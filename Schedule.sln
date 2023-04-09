@@ -35,11 +35,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.DbMigrator", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.HttpApi.Host", "src\Schedule.HttpApi.Host\Schedule.HttpApi.Host.csproj", "{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedule.Worker.ParsePalesse", "src\Schedule.Worker.ParsePalesse\Schedule.Worker.ParsePalesse.csproj", "{F7A285C7-E102-4073-97F4-F6B4CE0BE665}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.Worker.ParsePalesse", "src\Schedule.Worker.ParsePalesse\Schedule.Worker.ParsePalesse.csproj", "{F7A285C7-E102-4073-97F4-F6B4CE0BE665}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workers", "workers", "{4C0A16F6-3582-462C-ACD5-A1C8D566DD63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedule.TBot", "src\Schedule.TBot\Schedule.TBot.csproj", "{71B3DCF9-15FC-4349-9C66-DBE237E0C353}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Schedule.TBot", "src\Schedule.TBot\Schedule.TBot.csproj", "{71B3DCF9-15FC-4349-9C66-DBE237E0C353}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedule.TBot.Samples", "Schedule.TBot.Samples\Schedule.TBot.Samples.csproj", "{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,10 @@ Global
 		{71B3DCF9-15FC-4349-9C66-DBE237E0C353}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71B3DCF9-15FC-4349-9C66-DBE237E0C353}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71B3DCF9-15FC-4349-9C66-DBE237E0C353}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +138,7 @@ Global
 		{96E5259E-59A3-4FAF-BCD1-5BF8E74EF82C} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{F7A285C7-E102-4073-97F4-F6B4CE0BE665} = {4C0A16F6-3582-462C-ACD5-A1C8D566DD63}
 		{71B3DCF9-15FC-4349-9C66-DBE237E0C353} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
+		{9F3E762F-ED0B-4E2D-A648-B1F16F8C52AF} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F3156F7-1E30-D20D-688D-07AC44A75A83}

@@ -68,6 +68,7 @@ public class Program
             var app = builder.Build();
             
             //app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
+           
             await app.InitializeApplicationAsync();
             await app.RunAsync();
             return 0;

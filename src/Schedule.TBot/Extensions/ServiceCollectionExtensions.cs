@@ -5,7 +5,7 @@ namespace Schedule.TBot.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void RegisterAnswerHandlers(this ServiceCollection serviceDescriptors)
+        public static void RegisterAnswerHandlers(this IServiceCollection serviceDescriptors)
         {
             var answerHandlers = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).Where(x => !x.IsAbstract && typeof(BaseAnswerHandler).IsAssignableFrom(x)).ToArray();
             foreach (var handler in answerHandlers)

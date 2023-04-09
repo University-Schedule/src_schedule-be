@@ -7,6 +7,6 @@ namespace Schedule.TBot.Framework
     {
         public ITelegramBotClient BotClient { get; init; }
         public long UserId { get; init; }
-        public Func<long,  ReplyKeyboardMarkup, Task> RegisterReplyKeyboardAsync { get; init; }
+        public Func<long, ReplyMarkupBase, Task> RegisterReplyKeyboardAsync { get; init; }
     }
 }
