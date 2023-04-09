@@ -41,15 +41,19 @@ namespace Schedule.TBot
 
         private async static Task HandleMessageAsync(IServiceProvider serviceProvider, ITelegramBotClient botClient, BotActionConfiguration configuration, Message message)
         {
-            if (message is not null)
+            try
             {
-                var scope = serviceProvider.CreateScope();
+                if (message is not null)
+                {
+                    var scope = serviceProvider.CreateScope();
 
-                var handler = new MessageHandler(botClient, configuration, scope);
-                await handler.HandleAsync(message);
+                    var handler = new MessageHandler(botClient, configuration, scope);
+                    await handler.HandleAsync(message);
 
-                scope.Dispose();
+                    scope.Dispose();
+                }
             }
+            catch { }
         }
     }
 }
