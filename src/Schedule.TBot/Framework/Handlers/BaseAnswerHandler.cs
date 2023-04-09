@@ -36,10 +36,9 @@ namespace Schedule.TBot.Framework.Handlers
 
         protected async Task AnswerAsync(string text, ReplyMarkupBase keyboard = null)
         {
-            //handle actions keyboards
-            if (keyboard is ReplyKeyboardMarkup replyKeyboard && replyKeyboard is not null)
+            if (keyboard is not null)
             {
-                await AnswerContext.RegisterReplyKeyboardAsync(AnswerContext.UserId, replyKeyboard);
+                await AnswerContext.RegisterReplyKeyboardAsync(AnswerContext.UserId, keyboard);
             }
             await AnswerContext.BotClient.SendTextMessageAsync(AnswerContext.UserId, text, replyMarkup: keyboard);
         }
