@@ -7,10 +7,8 @@
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <PackageId>TBotFramework</PackageId>
-        <Title>TelegramBot Framework</Title>
+        <Title>TelegramBot Frameform</Title>
         <Authors>Alexandr</Authors>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.0.3</Version>
     </PropertyGroup>
 
     <ItemGroup>
