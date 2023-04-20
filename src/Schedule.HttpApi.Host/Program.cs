@@ -8,6 +8,8 @@ using Schedule.Extensions;
 using Schedule.Handlers;
 using Schedule.Services;
 using Schedule.Settings;
+using Schedule.TBot.Answers;
+using Schedule.TBot.Extensions;
 using Serilog;
 using Serilog.Events;
 using Telegram.Bot;
@@ -38,27 +40,30 @@ public class Program
             var builder = WebApplication.CreateBuilder(args);
             
             
-            var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
-            builder.Services.Configure<BotConfiguration>(botConfigurationSection);
-
-            var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
+            // var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
+            // builder.Services.Configure<BotConfiguration>(botConfigurationSection);
+            //
+            // var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 
             builder.Services
                 .AddControllers()
                 .AddNewtonsoftJson();
 // Add services to the container.
 
-            builder.Services.AddHttpClient("telegram_bot_client")
-                .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
-                {
-                    BotConfiguration? botConfig = sp.GetConfiguration<BotConfiguration>();
-                    TelegramBotClientOptions options = new(botConfig.BotToken);
-                    return new TelegramBotClient(options, httpClient);
-                });
+            // builder.Services.AddHttpClient("telegram_bot_client")
+            //     .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
+            //     {
+            //         BotConfiguration? botConfig = sp.GetConfiguration<BotConfiguration>();
+            //         TelegramBotClientOptions options = new(botConfig.BotToken);
+            //         return new TelegramBotClient(options, httpClient);
+            //     });
 
-            builder.Services.AddScoped<BotHandler>();
+            builder.Services.AddMemoryCache();
+            builder.Services.RegisterAnswerHandlers();
+            
+            //builder.Services.AddScoped<BotHandler>();
 
-            builder.Services.AddHostedService<WebhookService>();
+            //builder.Services.AddHostedService<WebhookService>();
             
             builder.Host
                 .AddAppSettingsSecretsJson()
@@ -68,6 +73,10 @@ public class Program
             var app = builder.Build();
             
             //app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
+            await app.RunTBotAsync("6114166319:AAEokZNZlR3EuQ7SoYQKuJdGzzUUqf_Alno", x =>
+            {
+                x.Default<TestAnswerHandler>();
+            });
            
             await app.InitializeApplicationAsync();
             await app.RunAsync();
@@ -84,3 +93,5 @@ public class Program
         }
     }
 }
+
+

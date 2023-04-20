@@ -18,7 +18,6 @@ public class BotController : AbpController
         [FromServices] BotHandler botHandler,
         CancellationToken cancellationToken)
     {
-        HttpContext.
         await botHandler.HandleUpdateAsync(update, cancellationToken);
         return Ok();
     }

@@ -40,7 +40,7 @@ namespace Schedule.TBot.Framework.Handlers
             {
                 await AnswerContext.RegisterReplyKeyboardAsync(AnswerContext.UserId, keyboard);
             }
-            await AnswerContext.BotClient.SendTextMessageAsync(AnswerContext.UserId, text, replyMarkup: keyboard);
+            await AnswerContext.BotClient.SendTextMessageAsync(AnswerContext.UserId, text);//, replyMarkup: keyboard);
         }
 
         

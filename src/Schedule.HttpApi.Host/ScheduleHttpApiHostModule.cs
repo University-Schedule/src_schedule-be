@@ -32,12 +32,9 @@ using Volo.Abp.Account.Public.Web.ExternalProviders;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Schedule.HealthChecks;
-using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonX;
-using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonX.Bundling;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Identity;
-using Volo.Abp.LeptonX.Shared;
 using Volo.Abp.Swashbuckle;
 using Volo.Saas.Host;
 
@@ -49,7 +46,6 @@ namespace Schedule;
     typeof(AbpAspNetCoreMultiTenancyModule),
     typeof(ScheduleApplicationModule),
     typeof(ScheduleEntityFrameworkCoreModule),
-    typeof(AbpAspNetCoreMvcUiLeptonXThemeModule),
     typeof(AbpAccountPublicWebImpersonationModule),
     typeof(AbpAccountPublicWebOpenIddictModule),
     typeof(AbpSwashbuckleModule),
@@ -103,7 +99,6 @@ public class ScheduleHttpApiHostModule : AbpModule
 
         ConfigureAuthentication(context);
         ConfigureUrls(configuration);
-        ConfigureBundles();
         ConfigureConventionalControllers();
         ConfigureImpersonation(context, configuration);
         ConfigureSwagger(context, configuration);
@@ -111,15 +106,6 @@ public class ScheduleHttpApiHostModule : AbpModule
         ConfigureCors(context, configuration);
         ConfigureExternalProviders(context);
         ConfigureHealthChecks(context);
-        ConfigureTheme();
-    }
-
-    private void ConfigureTheme()
-    {
-        Configure<LeptonXThemeOptions>(options =>
-        {
-            options.DefaultStyle = LeptonXStyleNames.System;
-        });
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -143,21 +129,6 @@ public class ScheduleHttpApiHostModule : AbpModule
             options.RedirectAllowedUrls.AddRange(configuration["App:RedirectAllowedUrls"].Split(','));
         });
     }
-
-    private void ConfigureBundles()
-    {
-        Configure<AbpBundlingOptions>(options =>
-        {
-            options.StyleBundles.Configure(
-                LeptonXThemeBundles.Styles.Global,
-                bundle =>
-                {
-                    bundle.AddFiles("/global-styles.css");
-                }
-            );
-        });
-    }
-
 
     private void ConfigureVirtualFileSystem(ServiceConfigurationContext context)
     {
